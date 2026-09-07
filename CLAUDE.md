@@ -2,7 +2,7 @@
 
 Following is a rough plan of what i plan to build step by step.
 
-Instruction for AI: Only do what i tell you to do, no extra librarys or tooling. Keep it is simple as possible with. Components should be created when it makes sense. If you miss something ask me.
+Instruction for AI: Only do what i tell you to do, no extra librarys or tooling. Keep it is simple as possible with. Components should be created when it makes sense. If you miss something ask me. When there are dependencies to install tell me and i want to install them manually, as they bring a lot of code with them and i want to know where all the code comes from. This also covers new shadcn components: never run the install yourself. Give me the exact command, stop, and wait. I run it, commit it, and tell you to continue. Meanwhile build everything that does not depend on the missing code.
 
 ## 1. Product concept
 

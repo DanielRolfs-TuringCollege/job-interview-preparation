@@ -15,7 +15,7 @@ export default function Home() {
   });
 
   return (
-    <main className="grid flex-1 grid-cols-1 divide-y divide-border md:grid-cols-[1fr_240px_1fr] md:divide-x md:divide-y-0">
+    <main className="grid min-h-0 flex-1 grid-cols-1 divide-y divide-border md:grid-cols-[1fr_240px_1fr] md:divide-x md:divide-y-0">
       <JobDescriptionColumn
         action={formAction}
         value={jobDescription}

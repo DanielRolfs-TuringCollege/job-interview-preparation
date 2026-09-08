@@ -15,11 +15,11 @@ export function JobDescriptionColumn({
   error: string | null;
 }) {
   return (
-    <form action={action} className="flex flex-col gap-4 p-6">
+    <form action={action} className="flex min-h-0 flex-col gap-4 p-6">
       <h2 className="text-lg font-semibold">Job description</h2>
       <Textarea
         name="jobDescription"
-        className="field-sizing-fixed flex-1 resize-none"
+        className="field-sizing-fixed min-h-0 flex-1 resize-none"
         placeholder="Paste the full text of the job you will interview for..."
         value={value}
         onChange={(event) => onValueChange(event.target.value)}

@@ -3,7 +3,11 @@
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
 
-import { FEW_SHOT_INSTRUCTIONS, ZERO_SHOT_INSTRUCTIONS } from "@/lib/prompts";
+import {
+  CHAIN_OF_THOUGHT_INSTRUCTIONS,
+  FEW_SHOT_INSTRUCTIONS,
+  ZERO_SHOT_INSTRUCTIONS,
+} from "@/lib/prompts";
 
 const MODEL = "openai/gpt-5-mini";
 
@@ -26,17 +30,26 @@ function toSkillList(value: unknown): string[] {
   return value.filter((item): item is string => typeof item === "string");
 }
 
-/** The model is told to answer with bare JSON, but may still wrap it in prose. */
+/**
+ * The model is told to answer with bare JSON, but may wrap it in prose - the
+ * chain of thought prompt puts a whole reasoning block in front of it. Walk the
+ * "{" from right to left until one of them parses against the last "}".
+ */
 function parseSkills(raw: string): Skills | null {
-  const start = raw.indexOf("{");
   const end = raw.lastIndexOf("}");
 
-  if (start === -1 || end <= start) {
-    return null;
-  }
+  for (let start = end - 1; start >= 0; start--) {
+    if (raw[start] !== "{") {
+      continue;
+    }
 
-  try {
-    const parsed: unknown = JSON.parse(raw.slice(start, end + 1));
+    let parsed: unknown;
+
+    try {
+      parsed = JSON.parse(raw.slice(start, end + 1));
+    } catch {
+      continue;
+    }
 
     if (typeof parsed !== "object" || parsed === null) {
       return null;
@@ -48,9 +61,9 @@ function parseSkills(raw: string): Skills | null {
       mustHave: toSkillList(mustHave),
       niceToHave: toSkillList(niceToHave),
     };
-  } catch {
-    return null;
   }
+
+  return null;
 }
 
 export async function analyseJobDescription(
@@ -70,7 +83,7 @@ export async function analyseJobDescription(
   try {
     const { text } = await generateText({
       model: openrouter(MODEL),
-      instructions: FEW_SHOT_INSTRUCTIONS, // Exchange for other prompt in prompts.ts
+      instructions: CHAIN_OF_THOUGHT_INSTRUCTIONS, // Exchange for other prompt in prompts.ts
       prompt: jobText,
     });
 

@@ -1,3 +1,4 @@
+import { PromptMethodSelect } from "@/components/prompt-method-select";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -25,9 +26,12 @@ export function JobDescriptionColumn({
         onChange={(event) => onValueChange(event.target.value)}
       />
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button className="self-start" type="submit" disabled={isPending}>
-        {isPending ? "Analysing..." : "Analyse"}
-      </Button>
+      <div className="flex items-end justify-between gap-2">
+        <PromptMethodSelect />
+        <Button type="submit" disabled={isPending}>
+          {isPending ? "Analysing..." : "Analyse"}
+        </Button>
+      </div>
     </form>
   );
 }

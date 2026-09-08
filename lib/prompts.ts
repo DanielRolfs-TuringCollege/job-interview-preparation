@@ -95,3 +95,27 @@ Rules for the answer:
 - No duplicates across the two arrays.
 - Never invent a skill that is not in the posting.
 - Both keys are always present. Use an empty array if the posting names none.`;
+
+/** The prompting methods the user can pick from in the job description column. */
+export const PROMPT_METHODS = {
+  "zero-shot": {
+    label: "Zero shot",
+    instructions: ZERO_SHOT_INSTRUCTIONS,
+  },
+  "few-shot": {
+    label: "Few shot",
+    instructions: FEW_SHOT_INSTRUCTIONS,
+  },
+  "chain-of-thought": {
+    label: "Chain of thought",
+    instructions: CHAIN_OF_THOUGHT_INSTRUCTIONS,
+  },
+} as const;
+
+export type PromptMethod = keyof typeof PROMPT_METHODS;
+
+export const DEFAULT_PROMPT_METHOD: PromptMethod = "chain-of-thought";
+
+export function isPromptMethod(value: string): value is PromptMethod {
+  return value in PROMPT_METHODS;
+}

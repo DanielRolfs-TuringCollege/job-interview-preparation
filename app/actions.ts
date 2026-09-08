@@ -4,9 +4,9 @@ import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
 
 import {
-  CHAIN_OF_THOUGHT_INSTRUCTIONS,
-  FEW_SHOT_INSTRUCTIONS,
-  ZERO_SHOT_INSTRUCTIONS,
+  DEFAULT_PROMPT_METHOD,
+  isPromptMethod,
+  PROMPT_METHODS,
 } from "@/lib/prompts";
 
 const MODEL = "openai/gpt-5-mini";
@@ -71,6 +71,7 @@ export async function analyseJobDescription(
   formData: FormData,
 ): Promise<AnalyseState> {
   const jobText = String(formData.get("jobDescription") ?? "").trim();
+  const method = String(formData.get("promptMethod") ?? "");
 
   if (!jobText) {
     return { raw: null, skills: null, error: "Paste a job description first." };
@@ -83,7 +84,9 @@ export async function analyseJobDescription(
   try {
     const { text } = await generateText({
       model: openrouter(MODEL),
-      instructions: CHAIN_OF_THOUGHT_INSTRUCTIONS, // Exchange for other prompt in prompts.ts
+      instructions:
+        PROMPT_METHODS[isPromptMethod(method) ? method : DEFAULT_PROMPT_METHOD]
+          .instructions,
       prompt: jobText,
     });
 

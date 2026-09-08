@@ -238,3 +238,30 @@ export const DEFAULT_PROMPT_METHOD: PromptMethod = "chain-of-thought";
 export function isPromptMethod(value: string): value is PromptMethod {
   return value in PROMPT_METHODS;
 }
+
+/**
+ * The practice column generates its questions with this one prompt - the
+ * methods above only apply to the extraction of the skills.
+ */
+export const QUESTIONS_INSTRUCTIONS = `You write multiple choice interview questions about one skill.
+
+You are given a skill and the experience level of the candidate. Ask what an
+interviewer would ask a candidate of that level about that skill: a beginner
+about the basics and the vocabulary, an intermediate about the everyday work and
+the common pitfalls, an advanced candidate about trade offs, edge cases and
+internals.
+
+Answer with one JSON object and nothing else. No markdown, no code fences, no
+commentary. The object has exactly this shape:
+
+{"questions": [{"question": string, "options": [string, string, string], "correctIndex": 0, "explanation": string}]}
+
+Rules:
+- Exactly 3 questions, each with exactly 3 options.
+- Exactly one option is correct. "correctIndex" is its position in "options",
+  counted from 0. Put the correct option in a different position in each question.
+- The two wrong options are plausible and wrong for a reason - never a joke, never
+  obviously off topic.
+- Every question stands on its own. Never refer to another question or its answer.
+- "explanation" says why the correct option is correct, in at most 2 sentences.
+- No two questions cover the same ground.`;

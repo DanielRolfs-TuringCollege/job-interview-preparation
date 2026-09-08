@@ -57,9 +57,9 @@ export function PromptMethodSelect() {
               <TooltipContent
                 side="right"
                 align="start"
-                className="max-w-[min(36rem,90vw)] items-start"
+                className="max-h-(--available-height) max-w-(--available-width) items-start"
               >
-                <pre className="max-h-[60vh] overflow-auto font-mono text-[11px] whitespace-pre-wrap">
+                <pre className="max-h-[calc(var(--available-height)-0.75rem)] overflow-auto font-mono text-[11px] whitespace-pre-wrap">
                   {instructions}
                 </pre>
               </TooltipContent>

@@ -109,6 +109,55 @@ Rules for the answer:
 - Never invent a skill that is not in the posting.
 - Both keys are always present. Use an empty array if the posting names none.`;
 
+/**
+ * Least to most: the model solves the easiest sub problem first and feeds its
+ * answer into the next one - which skills the posting names, then required or
+ * optional, then the sub skills of each. The steps stay in the raw output, the
+ * app renders the JSON, where each skill carries its sub skills in brackets.
+ */
+export const LEAST_TO_MOST_INSTRUCTIONS = `You extract the skill requirements from a job posting and break every skill down into its sub skills.
+
+Solve this in four steps, in this order. Every step works on the answer of the
+step before it, so never skip ahead.
+
+STEP 1 - Write the line "SKILLS:" and below it every skill the posting asks for,
+one per line, prefixed with "- ". A skill is a technology, language, framework,
+tool, methodology or qualification the posting asks for. What the company offers
+- salary, equipment, holidays, benefits - is never a skill. Name the skill only,
+in the posting's own wording, e.g. "TypeScript", "PostgreSQL", "5 years backend
+experience". Never a full sentence. Never invent a skill that is not in the
+posting.
+
+STEP 2 - Write the line "REQUIRED OR OPTIONAL:" and repeat every skill from step
+1, one per line, each followed by " - optional" when the posting marks it as
+optional, preferred, a plus or a bonus, and by " - required" in every other case.
+
+STEP 3 - Write the line "SUB SKILLS:" and repeat every skill from step 1, one per
+line, each followed by two to four sub skills that belong to it. A sub skill is a
+part of the main skill an interviewer would ask about, e.g. "hooks" for "React".
+Unlike the main skills, the sub skills do not have to appear in the posting - you
+name them yourself. Leave a skill without sub skills when it cannot be broken
+down, e.g. "5 years backend experience".
+
+Write steps 1 to 3 as plain lines, in the same language as the job posting.
+Never use the characters { or } in them.
+
+STEP 4 - Write the line "ANSWER:" and below it one JSON object, nothing after it.
+No markdown, no code fences, no commentary. The object has exactly these two
+keys:
+
+{"mustHave": string[], "niceToHave": string[]}
+
+Rules for the answer:
+- Every entry is the skill from step 1 followed by its sub skills from step 3 in
+  round brackets, separated by ", " - e.g.
+  "React (hooks, component composition, state management)". A skill that has no
+  sub skills stays as it is, e.g. "5 years backend experience".
+- The skills marked optional in step 2 go into "niceToHave", the required ones
+  into "mustHave".
+- No duplicates across the two arrays.
+- Both keys are always present. Use an empty array if the posting names none.`;
+
 /** The prompting methods the user can pick from in the job description column. */
 export const PROMPT_METHODS = {
   "zero-shot": {
@@ -122,6 +171,10 @@ export const PROMPT_METHODS = {
   "chain-of-thought": {
     label: "Chain of thought",
     instructions: CHAIN_OF_THOUGHT_INSTRUCTIONS,
+  },
+  "least-to-most": {
+    label: "Least to most",
+    instructions: LEAST_TO_MOST_INSTRUCTIONS,
   },
 } as const;
 

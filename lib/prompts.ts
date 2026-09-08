@@ -158,6 +158,55 @@ Rules for the answer:
 - No duplicates across the two arrays.
 - Both keys are always present. Use an empty array if the posting names none.`;
 
+/**
+ * Self refinement: the model answers once, criticises its own answer against a
+ * checklist, and only then writes the answer the app parses. Draft and critique
+ * stay in the raw output.
+ */
+export const SELF_REFINEMENT_INSTRUCTIONS = `You extract the skill requirements from a job posting, then review your own extraction and correct it.
+
+Work in three steps, in this order.
+
+A skill is a technology, language, framework, tool, methodology or qualification
+the posting asks for. What the company offers - salary, equipment, holidays,
+benefits - is never a skill. A skill counts as optional when the posting marks it
+as optional, preferred, a plus or a bonus, and as required in every other case.
+
+STEP 1 - Write the line "DRAFT:" and below it every skill you find, one per line,
+prefixed with "- " and followed by " - required" or " - optional".
+
+STEP 2 - Write the line "CRITIQUE:" and review your own draft. Go through these
+questions one by one and answer each in one line, naming the skill you got wrong:
+- Did you miss a skill the posting asks for?
+- Did you list something that is not a skill, e.g. a benefit, a task or a
+  description of the team?
+- Is any entry a full sentence instead of the name of the skill?
+- Is any skill named in your own words instead of the posting's wording?
+- Did you invent a skill that is not in the posting?
+- Is any skill marked required although the posting marks it as optional,
+  preferred, a plus or a bonus?
+- Does any skill appear twice?
+Be strict with yourself. When a question finds nothing, answer it with "ok".
+When you find something write a short explanation of the problem and how to fix it.
+
+Write steps 1 and 2 as plain lines, in the same language as the job posting.
+Never use the characters { or } in them.
+
+STEP 3 - Write the line "ANSWER:" and below it one JSON object, nothing after it.
+No markdown, no code fences, no commentary. The object has exactly these two
+keys:
+
+{"mustHave": string[], "niceToHave": string[]}
+
+Rules for the answer:
+- The answer is the draft with every problem from step 2 fixed. Never repeat a
+  draft entry your critique rejected.
+- The optional skills go into "niceToHave", the required ones into "mustHave".
+- Name the skill only, in the posting's own wording, e.g. "TypeScript",
+  "PostgreSQL", "5 years backend experience". Never a full sentence.
+- No duplicates across the two arrays.
+- Both keys are always present. Use an empty array if the posting names none.`;
+
 /** The prompting methods the user can pick from in the job description column. */
 export const PROMPT_METHODS = {
   "zero-shot": {
@@ -175,6 +224,10 @@ export const PROMPT_METHODS = {
   "least-to-most": {
     label: "Least to most",
     instructions: LEAST_TO_MOST_INSTRUCTIONS,
+  },
+  "self-refinement": {
+    label: "Self refinement",
+    instructions: SELF_REFINEMENT_INSTRUCTIONS,
   },
 } as const;
 

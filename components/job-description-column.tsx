@@ -3,10 +3,14 @@ import { Textarea } from "@/components/ui/textarea";
 
 export function JobDescriptionColumn({
   action,
+  value,
+  onValueChange,
   isPending,
   error,
 }: {
   action: (formData: FormData) => void;
+  value: string;
+  onValueChange: (value: string) => void;
   isPending: boolean;
   error: string | null;
 }) {
@@ -17,6 +21,8 @@ export function JobDescriptionColumn({
         name="jobDescription"
         className="field-sizing-fixed flex-1 resize-none"
         placeholder="Paste the full text of the job you will interview for..."
+        value={value}
+        onChange={(event) => onValueChange(event.target.value)}
       />
       {error && <p className="text-sm text-destructive">{error}</p>}
       <Button className="self-start" type="submit" disabled={isPending}>

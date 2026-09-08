@@ -1,29 +1,33 @@
 /**
- * Zero shot: no examples, the rules alone have to carry the format.
- * Kept as the demo of the first attempt - the app uses FEW_SHOT_INSTRUCTIONS.
+ * Zero shot: the task, the format and the rules, described and nothing more.
+ * No examples - the description alone has to carry it. Everything below the
+ * first line is identical to FEW_SHOT_INSTRUCTIONS, so the examples are the
+ * only difference between the two prompts.
  */
 export const ZERO_SHOT_INSTRUCTIONS = `You extract the skill requirements from a job posting.
 
-List every skill, technology, language, framework, tool, methodology or
-qualification the posting asks for under two headings:
+Answer with one JSON object and nothing else. No markdown, no code fences, no
+commentary. The object has exactly these two keys:
 
-MUST HAVE
-- the posting states it as required
-
-NICE TO HAVE
-- the posting states it as optional, preferred, a plus or a bonus
+{"mustHave": string[], "niceToHave": string[]}
 
 Rules:
+- A skill is a technology, language, framework, tool, methodology or
+  qualification the posting asks for. What the company offers - salary,
+  equipment, holidays, benefits - is never a skill.
+- "niceToHave" holds the skills the posting marks as optional, preferred, a plus
+  or a bonus. Every other skill belongs in "mustHave".
 - Name the skill only, in the posting's own wording, e.g. "TypeScript",
-  "PostgreSQL", "Docker", "5 years backend experience". Never a full sentence.
-- One skill per line, prefixed with "- ". No duplicates across both headings.
+  "PostgreSQL", "5 years backend experience". Never a full sentence.
+- No duplicates across the two arrays.
 - Never invent a skill that is not in the posting.
-- If the posting does not mark a skill as optional, it belongs under MUST HAVE.
-- Answer with the two headings and their lines only. No other text.`;
+- Both keys are always present. Use an empty array if the posting names none.`;
 
 /**
- * Few shot: the same rules, plus worked examples that show the exact JSON the
- * app parses.
+ * Few shot: the zero shot rules, plus worked examples that show the exact JSON
+ * the app parses. The examples demonstrate what the rules state but a model
+ * still gets wrong - the optional markers, the posting's own wording in its own
+ * language, benefits that are not skills, and an empty "niceToHave" array.
  */
 export const FEW_SHOT_INSTRUCTIONS = `You extract the skill requirements from a job posting.
 
@@ -34,7 +38,8 @@ commentary. The object has exactly these two keys:
 
 Rules:
 - A skill is a technology, language, framework, tool, methodology or
-  qualification the posting asks for.
+  qualification the posting asks for. What the company offers - salary,
+  equipment, holidays, benefits - is never a skill.
 - "niceToHave" holds the skills the posting marks as optional, preferred, a plus
   or a bonus. Every other skill belongs in "mustHave".
 - Name the skill only, in the posting's own wording, e.g. "TypeScript",
@@ -57,7 +62,15 @@ TypeScript, experience with REST APIs, fluent English, a structured way of
 working. Nice to have: Figma, German language skills.
 
 Example answer:
-{"mustHave":["React","TypeScript","REST APIs","fluent English","a structured way of working"],"niceToHave":["Figma","German language skills"]}`;
+{"mustHave":["React","TypeScript","REST APIs","fluent English","a structured way of working"],"niceToHave":["Figma","German language skills"]}
+
+Example job posting:
+Werkstudent Data Analytics. Deine Aufgaben: Auswertungen in Python und SQL,
+Aufbereitung der Ergebnisse in Power BI. Wir bieten dir flexible Arbeitszeiten,
+ein MacBook und 30 Tage Urlaub.
+
+Example answer:
+{"mustHave":["Python","SQL","Power BI"],"niceToHave":[]}`;
 
 /**
  * Chain of thought: the model reasons about each skill first and only then

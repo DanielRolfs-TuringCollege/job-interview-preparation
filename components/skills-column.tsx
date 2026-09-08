@@ -1,10 +1,15 @@
+import { ChevronRight } from "lucide-react";
+import { Fragment } from "react";
+
 import type { Skills } from "@/app/actions";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function SkillGroup({ title, skills }: { title: string; skills: string[] }) {
   if (skills.length === 0) {
@@ -13,16 +18,23 @@ function SkillGroup({ title, skills }: { title: string; skills: string[] }) {
 
   return (
     <div className="flex flex-col gap-1">
-      <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+      <h3 className="px-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
         {title}
       </h3>
-      <ul className="flex flex-col divide-y divide-border">
-        {skills.map((skill) => (
-          <li key={skill} className="py-1.5 text-sm">
-            {skill}
-          </li>
+      <div className="flex flex-col">
+        {skills.map((skill, index) => (
+          <Fragment key={skill}>
+            {index > 0 && <Separator />}
+            <TabsTrigger
+              value={skill}
+              className="h-auto flex-none justify-between rounded-none px-2 py-2 text-left font-normal break-words whitespace-normal hover:bg-muted/50"
+            >
+              {skill}
+              <ChevronRight className="text-muted-foreground" />
+            </TabsTrigger>
+          </Fragment>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
@@ -61,10 +73,13 @@ export function SkillsColumn({
         {isPending ? (
           <p className="text-sm text-muted-foreground">Analysing...</p>
         ) : skills ? (
-          <div className="flex flex-col gap-4">
+          <TabsList
+            variant="line"
+            className="w-full items-stretch justify-start gap-4 p-0 text-left"
+          >
             <SkillGroup title="Must have" skills={skills.mustHave} />
             <SkillGroup title="Nice to have" skills={skills.niceToHave} />
-          </div>
+          </TabsList>
         ) : (
           raw && (
             <p className="text-sm text-destructive">

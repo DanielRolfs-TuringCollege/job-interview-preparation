@@ -32,7 +32,7 @@ export default function Home() {
       onValueChange={(value) =>
         setSelectedSkill(typeof value === "string" ? value : null)
       }
-      className="grid min-h-0 flex-1 grid-cols-1 gap-0 divide-y divide-border md:grid-cols-[1fr_240px_1fr] md:divide-x md:divide-y-0"
+      className="grid min-h-0 flex-1 grid-cols-1 gap-0 divide-y divide-border md:grid-cols-3 md:divide-x md:divide-y-0"
     >
       <JobDescriptionColumn
         action={formAction}

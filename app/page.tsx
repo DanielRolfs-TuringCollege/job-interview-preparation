@@ -47,11 +47,11 @@ export default function Home() {
         isPending={isPending}
       />
       <div className="min-h-0 overflow-auto">
-        {allSkills.map((skill) => (
-          <TabsContent key={skill} value={skill}>
-            <PracticeColumn skill={skill} />
+        {activeSkill && (
+          <TabsContent key={activeSkill} value={activeSkill}>
+            <PracticeColumn skill={activeSkill} />
           </TabsContent>
-        ))}
+        )}
       </div>
     </Tabs>
   );

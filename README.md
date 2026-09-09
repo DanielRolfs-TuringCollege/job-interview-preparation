@@ -75,10 +75,10 @@ instructions") against prompt injection.
 - **Max tokens** — hard cap on the *output* length. Too low truncates
   mid-JSON, which is a parse error and not a model error.
 - **Seed** — makes sampling reproducible for a fixed prompt.
-  When a model generates text, it doesn't just pick the single most likely next token. 
-  It picks from a probability distribution, and that pick is random — 
-  which is why the same request can give different answers each time. 
-  The seed controls that randomness. It sets the initial state of the random number generator, 
+  When a model generates text, it doesn't just pick the single most likely next token.
+  It picks from a probability distribution, and that pick is random —
+  which is why the same request can give different answers each time.
+  The seed controls that randomness. It sets the initial state of the random number generator,
   so the same sequence of "random" numbers is used on each run
 - **Frequency penalty** - discourages repeating the same words and phrases.
 - **Presence penalty** - encourages introducing new concepts.
@@ -126,10 +126,11 @@ dedicated one with a source link.
 
 The project could be improved by:
 
-- Schema-enforcing it would be the cleaner option: a Zod schema makes the provider constrain 
+- Schema-enforcing it would be the cleaner option: a Zod schema makes the provider constrain
   the output to that shape and validates it before the app ever sees it, which
   would replace the hand-written parsing.
 - extended explanations plus links to further resources for every wrongly
   answered question, so the user can deep dive into the topic
 - generating follow-up questions from the wrong answers, to drill into the
   user's weak areas instead of asking a fresh random set
+- the generated questions could be reviewed by a llm judge if they are relevant for the job description

@@ -20,7 +20,7 @@ Three columns, left to right, mirroring the user's mental flow:
 │ │ view for...     │ │                      │  ─────────────────────────  │
 │ │                 │ │  NICE TO HAVE        │  Introduction (beginner)    │
 │ │                 │ │  ▸ Docker            │  Q1 ( ) A ( ) B ( ) C       │
-│ └─────────────────┘ │  ▸ GraphQL           │  ... 5 questions            │
+│ └─────────────────┘ │  ▸ GraphQL           │  ... 3 questions            │
 │ [ Analyse ]         │                      │  [ Submit ]                 │
 │                     │                      │  → explanations for wrong   │
 │                     │                      │  [ Continue learning ]      │

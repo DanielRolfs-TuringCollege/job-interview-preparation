@@ -77,17 +77,17 @@ function parseSkills(raw: string): Skills | null {
 }
 
 /**
- * The guard verdict. A text the judge did not clearly accept is refused, so a
- * malformed answer refuses as well.
+ * The guard verdict. Only an explicit accept passes, so a judge that answers
+ * with something the app cannot read refuses the text as well.
  */
-function parseVerdict(raw: string): { isJobPosting: boolean; reason: string } {
+function parseVerdict(raw: string): { accept: boolean; reason: string } {
   const parsed = parseJsonObject(raw);
-  const isJobPosting = parsed?.isJobPosting === true;
+  const accept = parsed?.accept === true;
   const reason = typeof parsed?.reason === "string" ? parsed.reason : "";
 
   return {
-    isJobPosting,
-    reason: isJobPosting
+    accept,
+    reason: accept
       ? ""
       : reason || "Nice try. Please insert a real job description instead.",
   };
@@ -118,7 +118,7 @@ export async function analyseJobDescription(
 
     const verdict = parseVerdict(verdictText);
 
-    if (!verdict.isJobPosting) {
+    if (!verdict.accept) {
       return { raw: null, skills: null, error: verdict.reason };
     }
 

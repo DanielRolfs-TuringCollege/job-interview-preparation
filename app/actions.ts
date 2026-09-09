@@ -5,6 +5,7 @@ import { generateText } from "ai";
 
 import {
   DEFAULT_PROMPT_METHOD,
+  GUARD_INSTRUCTIONS,
   isPromptMethod,
   PROMPT_METHODS,
   QUESTIONS_INSTRUCTIONS,
@@ -75,6 +76,23 @@ function parseSkills(raw: string): Skills | null {
   };
 }
 
+/**
+ * The guard verdict. A text the judge did not clearly accept is refused, so a
+ * malformed answer refuses as well.
+ */
+function parseVerdict(raw: string): { isJobPosting: boolean; reason: string } {
+  const parsed = parseJsonObject(raw);
+  const isJobPosting = parsed?.isJobPosting === true;
+  const reason = typeof parsed?.reason === "string" ? parsed.reason : "";
+
+  return {
+    isJobPosting,
+    reason: isJobPosting
+      ? ""
+      : reason || "Nice try. Please insert a real job description instead.",
+  };
+}
+
 export async function analyseJobDescription(
   _previousState: AnalyseState,
   formData: FormData,
@@ -91,6 +109,19 @@ export async function analyseJobDescription(
   });
 
   try {
+    /** The judge runs first - nothing is extracted from a text it refuses. */
+    const { text: verdictText } = await generateText({
+      model: openrouter(MODEL),
+      instructions: GUARD_INSTRUCTIONS,
+      prompt: jobText,
+    });
+
+    const verdict = parseVerdict(verdictText);
+
+    if (!verdict.isJobPosting) {
+      return { raw: null, skills: null, error: verdict.reason };
+    }
+
     const { text } = await generateText({
       model: openrouter(MODEL),
       instructions:

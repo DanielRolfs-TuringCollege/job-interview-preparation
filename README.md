@@ -24,7 +24,7 @@ I chose the following optional tasks:
 (medium) Add at least one security guard to your app to prevent misuse. Design for usability.
 
 - The guard sits before the skill extraction: its prompt is in
-  [lib/prompts.ts:315](lib/prompts.ts#L315) and it runs first in
+  [lib/prompts.ts:341](lib/prompts.ts#L341) and it runs first in
   [app/actions.ts:118](app/actions.ts#L118)
 
 (hard) Assess the performance of your prompt and/or model, via LLM-as-a-judge (Part 4) or other methods.
@@ -33,9 +33,9 @@ I chose the following optional tasks:
   in the practice column is LLM-as-a-judge: it
   sends the job posting, the skill, the experience level and the generated
   questions to the model and gets one verdict per question back
-  ([lib/prompts.ts:402](lib/prompts.ts#L402)).
+  ([lib/prompts.ts:428](lib/prompts.ts#L428)).
   I did not optimize the question generation prompt
-  ([lib/prompts.ts:246](lib/prompts.ts#L246)) on purpose so
+  ([lib/prompts.ts:272](lib/prompts.ts#L272)) on purpose so
   it creates not so good questions, especially for skills like "very good English". That way the judge can spot those questions.
 
 ### Developer-only features
@@ -58,9 +58,17 @@ in the skills column falls in the same category.
 
 ## Getting Started
 
-First, run the development server:
+The app calls the model through OpenRouter, so it needs an API key. Copy
+[.env.example](.env.example) to `.env` and put your key in it:
 
 ```bash
+cp .env.example .env
+```
+
+Then install the dependencies and run the development server:
+
+```bash
+pnpm install
 pnpm dev
 ```
 
@@ -73,17 +81,17 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 All five are implemented in [lib/prompts.ts](lib/prompts.ts) and switchable in
 the UI, so the same job posting can be extracted with each of them:
 
-- **[Zero shot](lib/prompts.ts#L7)** — task, format and rules described, no examples. The
+- **[Zero shot](lib/prompts.ts#L23)** — task, format and rules described, no examples. The
   description alone has to carry it.
-- **[Few shot](lib/prompts.ts#L32)** — the same rules plus worked examples that show the exact JSON
+- **[Few shot](lib/prompts.ts#L50)** — the same rules plus worked examples that show the exact JSON
   the app parses. Examples teach what rules state but models still get wrong.
-- **[Chain of thought](lib/prompts.ts#L80)** — the model reasons about each requirement first and
+- **[Chain of thought](lib/prompts.ts#L100)** — the model reasons about each requirement first and
   answers afterwards. Better on judgement calls, but the answer is buried in
   prose, so the parser has to find the JSON.
-- **[Least to most](lib/prompts.ts#L118)** — the task is broken into ordered sub-steps (find the
+- **[Least to most](lib/prompts.ts#L140)** — the task is broken into ordered sub-steps (find the
   requirements → split must/nice → name them) and each step builds on the
   previous one.
-- **[Self refinement](lib/prompts.ts#L166)** — the model drafts an answer, critiques it against the
+- **[Self refinement](lib/prompts.ts#L190)** — the model drafts an answer, critiques it against the
   rules, then emits the corrected version.
 
 ### LLM settings

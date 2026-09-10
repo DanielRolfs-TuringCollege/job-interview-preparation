@@ -7,6 +7,7 @@ import {
   DEFAULT_PROMPT_METHOD,
   GUARD_INSTRUCTIONS,
   isPromptMethod,
+  JUDGE_INSTRUCTIONS,
   PROMPT_METHODS,
   QUESTIONS_INSTRUCTIONS,
 } from "@/lib/prompts";
@@ -207,6 +208,7 @@ export async function generateQuestions(
   _previousState: QuestionsState,
   formData: FormData,
 ): Promise<QuestionsState> {
+  const jobText = String(formData.get("jobDescription") ?? "").trim();
   const skill = String(formData.get("skill") ?? "").trim();
   const level = String(formData.get("level") ?? "").trim();
 
@@ -218,6 +220,15 @@ export async function generateQuestions(
     };
   }
 
+  /** Without the posting the questions are about the skill in the abstract. */
+  if (!jobText) {
+    return {
+      raw: null,
+      questions: null,
+      error: "The job description is empty - paste it again.",
+    };
+  }
+
   const openrouter = createOpenRouter({
     apiKey: process.env.OPENROUTER_API_KEY,
   });
@@ -226,7 +237,7 @@ export async function generateQuestions(
     const { text } = await generateText({
       model: openrouter(MODEL),
       instructions: QUESTIONS_INSTRUCTIONS,
-      prompt: `Skill: ${skill}\nExperience level: ${level}`,
+      prompt: `Job posting:\n${jobText}\n\nSkill: ${skill}\nExperience level: ${level}`,
     });
 
     return { raw: text, questions: parseQuestions(text), error: null };
@@ -236,6 +247,110 @@ export async function generateQuestions(
       raw: null,
       questions: null,
       error: "Could not generate the questions.",
+    };
+  }
+}
+
+export type Verdict = {
+  relevant: boolean;
+  reason: string;
+};
+
+export type JudgeState = {
+  raw: string | null;
+  verdicts: Verdict[] | null;
+  error: string | null;
+};
+
+function toVerdict(value: unknown): Verdict | null {
+  if (typeof value !== "object" || value === null) {
+    return null;
+  }
+
+  const { relevant, reason } = value as Record<string, unknown>;
+
+  if (typeof relevant !== "boolean" || typeof reason !== "string") {
+    return null;
+  }
+
+  return { relevant, reason };
+}
+
+/**
+ * The verdicts carry no index - they are matched to the questions by their
+ * position, so a list that does not line up is dropped as a whole.
+ */
+function parseVerdicts(raw: string, count: number): Verdict[] | null {
+  const parsed = parseJsonObject(raw);
+
+  if (!parsed || !Array.isArray(parsed.verdicts)) {
+    return null;
+  }
+
+  const verdicts = parsed.verdicts.map(toVerdict);
+
+  if (verdicts.length !== count || verdicts.some((v) => v === null)) {
+    return null;
+  }
+
+  return verdicts as Verdict[];
+}
+
+/** The questions as the judge reads them, with the correct option marked. */
+function formatQuestions(questions: Question[]): string {
+  return questions
+    .map((question, index) => {
+      const options = question.options
+        .map(
+          (option, optionIndex) =>
+            `  - ${option}${optionIndex === question.correctIndex ? " (marked correct)" : ""}`,
+        )
+        .join("\n");
+
+      return `Question ${index + 1}: ${question.question}\n${options}`;
+    })
+    .join("\n\n");
+}
+
+export async function judgeQuestions(
+  _previousState: JudgeState,
+  formData: FormData,
+): Promise<JudgeState> {
+  const jobText = String(formData.get("jobDescription") ?? "").trim();
+  const skill = String(formData.get("skill") ?? "").trim();
+  const level = String(formData.get("level") ?? "").trim();
+  const questions = parseQuestions(String(formData.get("questions") ?? ""));
+
+  if (!jobText || !skill || !questions) {
+    return {
+      raw: null,
+      verdicts: null,
+      error: "Nothing to judge yet.",
+    };
+  }
+
+  const openrouter = createOpenRouter({
+    apiKey: process.env.OPENROUTER_API_KEY,
+  });
+
+  try {
+    const { text } = await generateText({
+      model: openrouter(MODEL),
+      instructions: JUDGE_INSTRUCTIONS,
+      prompt: `Job posting:\n${jobText}\n\nSkill: ${skill}\nExperience level: ${level}\n\n${formatQuestions(questions)}`,
+    });
+
+    return {
+      raw: text,
+      verdicts: parseVerdicts(text, questions.length),
+      error: null,
+    };
+  } catch (error) {
+    console.error("judgeQuestions failed", error);
+    return {
+      raw: null,
+      verdicts: null,
+      error: "Could not judge the questions.",
     };
   }
 }

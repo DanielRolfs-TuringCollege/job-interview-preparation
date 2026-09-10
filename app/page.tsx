@@ -49,7 +49,10 @@ export default function Home() {
       <div className="min-h-0 overflow-auto">
         {activeSkill && (
           <TabsContent key={activeSkill} value={activeSkill}>
-            <PracticeColumn skill={activeSkill} />
+            <PracticeColumn
+              skill={activeSkill}
+              jobDescription={jobDescription}
+            />
           </TabsContent>
         )}
       </div>

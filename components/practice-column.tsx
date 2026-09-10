@@ -14,7 +14,13 @@ const EXPERIENCE_LEVELS = [
   { value: "advanced", label: "Advanced" },
 ];
 
-export function PracticeColumn({ skill }: { skill: string }) {
+export function PracticeColumn({
+  skill,
+  jobDescription,
+}: {
+  skill: string;
+  jobDescription: string;
+}) {
   const [level, setLevel] = useState("intermediate");
   const [state, formAction, isPending] = useActionState(generateQuestions, {
     raw: null,
@@ -26,6 +32,7 @@ export function PracticeColumn({ skill }: { skill: string }) {
     <div className="flex min-h-0 flex-col gap-6 p-6">
       <h2 className="text-lg font-semibold">{skill}</h2>
       <form action={formAction} className="flex flex-col gap-4">
+        <input type="hidden" name="jobDescription" value={jobDescription} />
         <input type="hidden" name="skill" value={skill} />
         <FieldSet>
           <FieldLegend variant="label">Experience level</FieldLegend>
@@ -57,7 +64,13 @@ export function PracticeColumn({ skill }: { skill: string }) {
       {!isPending &&
         (state.questions ? (
           /** A new generation starts over, so the old answers are dropped. */
-          <QuestionList key={state.raw} questions={state.questions} />
+          <QuestionList
+            key={state.raw}
+            questions={state.questions}
+            jobDescription={jobDescription}
+            skill={skill}
+            level={level}
+          />
         ) : (
           state.raw && (
             <p className="text-sm text-destructive">

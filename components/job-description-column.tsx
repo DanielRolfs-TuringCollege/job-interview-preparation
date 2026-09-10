@@ -4,19 +4,25 @@ import { Textarea } from "@/components/ui/textarea";
 
 export function JobDescriptionColumn({
   action,
+  onSubmit,
   value,
   onValueChange,
   isPending,
   error,
 }: {
   action: (formData: FormData) => void;
+  onSubmit: () => void;
   value: string;
   onValueChange: (value: string) => void;
   isPending: boolean;
   error: string | null;
 }) {
   return (
-    <form action={action} className="flex min-h-0 flex-col gap-4 p-6">
+    <form
+      action={action}
+      onSubmit={onSubmit}
+      className="flex min-h-0 flex-col gap-4 p-6"
+    >
       <h2 className="text-lg font-semibold">Job description</h2>
       <Textarea
         name="jobDescription"

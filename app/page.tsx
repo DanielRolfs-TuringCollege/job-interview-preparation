@@ -17,18 +17,10 @@ export default function Home() {
     error: null,
   });
 
-  const allSkills = state.skills
-    ? [...state.skills.mustHave, ...state.skills.niceToHave]
-    : [];
-
-  /** A skill selected before a new analysis may no longer be on the list. */
-  const activeSkill =
-    selectedSkill && allSkills.includes(selectedSkill) ? selectedSkill : null;
-
   return (
     <Tabs
       orientation="vertical"
-      value={activeSkill}
+      value={selectedSkill}
       onValueChange={(value) =>
         setSelectedSkill(typeof value === "string" ? value : null)
       }
@@ -36,6 +28,7 @@ export default function Home() {
     >
       <JobDescriptionColumn
         action={formAction}
+        onSubmit={() => setSelectedSkill(null)}
         value={jobDescription}
         onValueChange={setJobDescription}
         isPending={isPending}
@@ -47,10 +40,10 @@ export default function Home() {
         isPending={isPending}
       />
       <div className="min-h-0 overflow-auto">
-        {activeSkill && (
-          <TabsContent key={activeSkill} value={activeSkill}>
+        {selectedSkill && (
+          <TabsContent key={selectedSkill} value={selectedSkill}>
             <PracticeColumn
-              skill={activeSkill}
+              skill={selectedSkill}
               jobDescription={jobDescription}
             />
           </TabsContent>

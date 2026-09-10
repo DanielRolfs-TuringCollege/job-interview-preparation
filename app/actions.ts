@@ -2,6 +2,7 @@
 
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
+import * as z from "zod";
 
 import {
   DEFAULT_PROMPT_METHOD,
@@ -14,24 +15,31 @@ import {
 
 const MODEL = "openai/gpt-5-mini";
 
-export type Skills = {
-  mustHave: string[];
-  niceToHave: string[];
-};
+/**
+ * How many skills a posting names is up to the posting, so neither list has a
+ * length to check and both may be empty. What can be checked is that the two
+ * lists stay apart: a skill in both would render as two tabs under the same
+ * name, which the middle column can not tell apart.
+ */
+const SkillsSchema = z
+  .object({
+    mustHave: z.array(z.string().min(1)),
+    niceToHave: z.array(z.string().min(1)),
+  })
+  .refine(
+    (skills) =>
+      new Set([...skills.mustHave, ...skills.niceToHave]).size ===
+      skills.mustHave.length + skills.niceToHave.length,
+    { error: "a skill appears in both groups" },
+  );
+
+export type Skills = z.infer<typeof SkillsSchema>;
 
 export type AnalyseState = {
   raw: string | null;
   skills: Skills | null;
   error: string | null;
 };
-
-function toSkillList(value: unknown): string[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value.filter((item): item is string => typeof item === "string");
-}
 
 /**
  * The model is told to answer with bare JSON, but may wrap it in prose - the
@@ -64,17 +72,14 @@ function parseJsonObject(raw: string): Record<string, unknown> | null {
   return null;
 }
 
+/**
+ * A list that came back part broken is no basis for the questions, so the
+ * answer is dropped as a whole and the raw output is left to look at.
+ */
 function parseSkills(raw: string): Skills | null {
-  const parsed = parseJsonObject(raw);
+  const parsed = SkillsSchema.safeParse(parseJsonObject(raw));
 
-  if (!parsed) {
-    return null;
-  }
-
-  return {
-    mustHave: toSkillList(parsed.mustHave),
-    niceToHave: toSkillList(parsed.niceToHave),
-  };
+  return parsed.success ? parsed.data : null;
 }
 
 /**
@@ -144,12 +149,28 @@ export async function analyseJobDescription(
   }
 }
 
-export type Question = {
-  question: string;
-  options: string[];
-  correctIndex: number;
-  explanation: string;
-};
+/** The counts the questions prompt promises, and the quiz is built around. */
+const QUESTION_COUNT = 3;
+const OPTION_COUNT = 3;
+
+/**
+ * The counts are the part no type can state - "string[]" cannot say "three of
+ * them" - so they are checked here instead. A whole "correctIndex" inside the
+ * option count is what makes the question answerable: a fraction matches no
+ * rendered option and would mark every answer wrong.
+ */
+const QuestionSchema = z.object({
+  question: z.string().min(1),
+  options: z.array(z.string().min(1)).length(OPTION_COUNT),
+  correctIndex: z.int().min(0).max(OPTION_COUNT - 1),
+  explanation: z.string().min(1),
+});
+
+const QuestionsSchema = z.object({
+  questions: z.array(QuestionSchema).length(QUESTION_COUNT),
+});
+
+export type Question = z.infer<typeof QuestionSchema>;
 
 export type QuestionsState = {
   raw: string | null;
@@ -157,51 +178,11 @@ export type QuestionsState = {
   error: string | null;
 };
 
-function toQuestion(value: unknown): Question | null {
-  if (typeof value !== "object" || value === null) {
-    return null;
-  }
-
-  const { question, options, correctIndex, explanation } = value as Record<
-    string,
-    unknown
-  >;
-
-  if (typeof question !== "string" || typeof explanation !== "string") {
-    return null;
-  }
-
-  if (
-    !Array.isArray(options) ||
-    !options.every((option) => typeof option === "string")
-  ) {
-    return null;
-  }
-
-  /** A question whose correct option is not in the list can not be answered. */
-  if (
-    typeof correctIndex !== "number" ||
-    correctIndex < 0 ||
-    correctIndex >= options.length
-  ) {
-    return null;
-  }
-
-  return { question, options, correctIndex, explanation };
-}
-
+/** A set that is short of a question, or carries a broken one, is dropped. */
 function parseQuestions(raw: string): Question[] | null {
-  const parsed = parseJsonObject(raw);
+  const parsed = QuestionsSchema.safeParse(parseJsonObject(raw));
 
-  if (!parsed || !Array.isArray(parsed.questions)) {
-    return null;
-  }
-
-  const questions = parsed.questions
-    .map(toQuestion)
-    .filter((question): question is Question => question !== null);
-
-  return questions.length > 0 ? questions : null;
+  return parsed.success ? parsed.data.questions : null;
 }
 
 export async function generateQuestions(
@@ -251,10 +232,13 @@ export async function generateQuestions(
   }
 }
 
-export type Verdict = {
-  relevant: boolean;
-  reason: string;
-};
+/** The judge names the ability behind every question, so the reason is never empty. */
+const VerdictSchema = z.object({
+  relevant: z.boolean(),
+  reason: z.string().min(1),
+});
+
+export type Verdict = z.infer<typeof VerdictSchema>;
 
 export type JudgeState = {
   raw: string | null;
@@ -262,38 +246,16 @@ export type JudgeState = {
   error: string | null;
 };
 
-function toVerdict(value: unknown): Verdict | null {
-  if (typeof value !== "object" || value === null) {
-    return null;
-  }
-
-  const { relevant, reason } = value as Record<string, unknown>;
-
-  if (typeof relevant !== "boolean" || typeof reason !== "string") {
-    return null;
-  }
-
-  return { relevant, reason };
-}
-
 /**
  * The verdicts carry no index - they are matched to the questions by their
  * position, so a list that does not line up is dropped as a whole.
  */
 function parseVerdicts(raw: string, count: number): Verdict[] | null {
-  const parsed = parseJsonObject(raw);
+  const parsed = z
+    .object({ verdicts: z.array(VerdictSchema).length(count) })
+    .safeParse(parseJsonObject(raw));
 
-  if (!parsed || !Array.isArray(parsed.verdicts)) {
-    return null;
-  }
-
-  const verdicts = parsed.verdicts.map(toVerdict);
-
-  if (verdicts.length !== count || verdicts.some((v) => v === null)) {
-    return null;
-  }
-
-  return verdicts as Verdict[];
+  return parsed.success ? parsed.data.verdicts : null;
 }
 
 /** The questions as the judge reads them, with the correct option marked. */

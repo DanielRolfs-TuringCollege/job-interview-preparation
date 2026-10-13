@@ -1,4 +1,4 @@
-# Interview Practice App
+# Job Interview Preparation App
 
 To demonstrate what I've learned in sprint one of the AI Engineering course I created this project.
 

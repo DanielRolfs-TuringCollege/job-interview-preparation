@@ -2,6 +2,8 @@
 
 To demonstrate what I've learned in sprint one of the AI Engineering course I created this project.
 
+![Preview](https://github.com/DanielRolfs/media/blob/main/job-interview-preparation/Example.png?raw=true)
+
 ## Info for the reviewer:
 
 I chose the following optional tasks:
